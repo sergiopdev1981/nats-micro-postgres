@@ -57,7 +57,9 @@ func handleDeleteUser(req micro.Request) {
 	*/
 	if err := json.Unmarshal(req.Data(), &requestData); err != nil {
 		log.Printf("Failed to parse request %v", err)
-		req.RespondJSON(map[string]string{"error": "invalid request"})
+		if err := req.RespondJSON(map[string]string{"error": "invalid request"}); err != nil {
+			log.Printf("Failed to send response: %v", err)
+		}
 		return
 	}
 
@@ -71,7 +73,9 @@ func handleDeleteUser(req micro.Request) {
 	*/
 	userID, ok := requestData["id"]
 	if !ok {
-		req.RespondJSON(map[string]string{"error": "User ID is not provided"})
+		if err := req.RespondJSON(map[string]string{"error": "User ID is not provided"}); err != nil {
+			log.Printf("Failed to send response: %v", err)
+		}
 		return
 	}
 
@@ -79,7 +83,9 @@ func handleDeleteUser(req micro.Request) {
 	db, err := connectDB()
 	if err != nil {
 		log.Printf("Failed to connect to database %v", err)
-		req.RespondJSON(map[string]string{"error": "Database connection error"})
+		if err := req.RespondJSON(map[string]string{"error": "Database connection error"}); err != nil {
+			log.Printf("Failed to send response: %v", err)
+		}
 		return
 	}
 	// with this db will close eventually
@@ -94,12 +100,16 @@ func handleDeleteUser(req micro.Request) {
 	err = deleteUserDB(db, userID)
 	if err != nil {
 		log.Printf("Failed to delete user from database %v", err)
-		req.RespondJSON(map[string]string{"error": err.Error()})
+		if err := req.RespondJSON(map[string]string{"error": err.Error()}); err != nil {
+			log.Printf("Failed to send response: %v", err)
+		}
 		return
 	}
 
 	// responds ok to client if magic happened
-	req.RespondJSON(map[string]string{"message": "User deleted succesfully"})
+	if err := req.RespondJSON(map[string]string{"message": "User deleted succesfully"}); err != nil {
+		log.Printf("Failed to send response: %v", err)
+	}
 }
 
 func main() {
