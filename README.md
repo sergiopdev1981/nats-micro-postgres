@@ -1,6 +1,5 @@
 # Microservices Project
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/sergiopdev1981/nats-micro-postgres)](https://goreportcard.com/report/github.com/sergiopdev1981/nats-micro-postgres)
 [![Go Version](https://img.shields.io/badge/Go-1.22.6-blue)](https://golang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-blue)](https://www.postgresql.org/)
 [![NATS](https://img.shields.io/badge/NATS-2.9.6-blue)](https://nats.io/)
