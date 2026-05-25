@@ -1,92 +1,89 @@
-# Microservices Project
+<p align="center">
+  <img src="https://img.shields.io/badge/lang-Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/messaging-NATS-27AAE1?style=for-the-badge&logo=nats&logoColor=white" alt="NATS">
+  <img src="https://img.shields.io/badge/database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/architecture-Microservices-FF6F00?style=for-the-badge" alt="Microservices">
+</p>
 
-[![Go Version](https://img.shields.io/badge/Go-1.22.6-blue)](https://golang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-blue)](https://www.postgresql.org/)
-[![NATS](https://img.shields.io/badge/NATS-2.9.6-blue)](https://nats.io/)
+# NATS Microservices with PostgreSQL
 
-This repository contains a collection of microservices written in Go. Each microservice is designed to handle a specific functionality and can be deployed independently.
+A collection of microservices written in Go, communicating via NATS message broker and persisting data in PostgreSQL.
 
-## Microservices Overview
+## Services
 
-### 1. `add_user`
-- **Description**: Handles the addition of new users to the system.
-- **Features**:
-  - Adds user data to the database.
-  - Validates input data.
-- **Dependencies**:
-  - `github.com/joho/godotenv`
-  - `github.com/nats-io/nats.go`
+| Service | Subject | Description |
+|---------|---------|-------------|
+| **add_user** | `users.add` | Creates a new user with the given username |
+| **get_user** | `users.get` | Retrieves a single user by ID |
+| **get_users** | `users.list` | Lists all users |
+| **update_user** | `users.update` | Updates a user's username by ID |
+| **delete_user** | `users.delete` | Deletes a user by ID |
 
-### 2. `delete_user`
-- **Description**: Manages the deletion of users from the system.
-- **Features**:
-  - Deletes user data from the database.
-  - Enhanced error handling for JSON responses.
-- **Dependencies**:
-  - `github.com/DATA-DOG/go-sqlmock`
-  - `github.com/joho/godotenv`
-  - `github.com/nats-io/nats.go`
+## Architecture
 
-### 3. `get_user`
-- **Description**: Retrieves information about a specific user.
-- **Features**:
-  - Fetches user data by ID.
-  - Returns data in JSON format.
-- **Dependencies**:
-  - `github.com/joho/godotenv`
-  - `github.com/nats-io/nats.go`
+Each microservice runs independently and communicates exclusively through NATS subjects. Services do not expose HTTP endpoints — all requests are NATS request-reply messages.
 
-### 4. `get_users`
-- **Description**: Retrieves a list of all users.
-- **Features**:
-  - Fetches all user data from the database.
-  - Supports pagination.
-- **Dependencies**:
-  - `github.com/joho/godotenv`
-  - `github.com/nats-io/nats.go`
+```
+Client ──> NATS ──> Microservice ──> PostgreSQL
+```
 
-### 5. `update_user`
-- **Description**: Handles updates to user information.
-- **Features**:
-  - Updates user data in the database.
-  - Validates input data.
-- **Dependencies**:
-  - `github.com/joho/godotenv`
-  - `github.com/nats-io/nats.go`
+Example request payload:
+```json
+{"username": "johndoe"}
+```
 
 ## Prerequisites
 
-To run these microservices, ensure you have the following services running:
-
 ### PostgreSQL
-- **Environment Variables**:
-  - `POSTGRES_USER`: Database username (e.g., `user1`)
-  - `POSTGRES_PASSWORD`: Database password (e.g., `password1`)
-  - `POSTGRES_DB`: Database name (e.g., `db_service1`)
-  - `POSTGRES_HOST`: Hostname or IP address (e.g., `localhost`)
-  - `POSTGRES_PORT`: Port number (e.g., `5431`)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `POSTGRES_USER` | Database username | `user1` |
+| `POSTGRES_PASSWORD` | Database password | `password1` |
+| `POSTGRES_DB` | Database name | `db_service1` |
+| `POSTGRES_HOST` | Hostname | `localhost` |
+| `POSTGRES_PORT` | Port | `5431` |
 
 ### NATS
-- **Environment Variables**:
-  - `NATS_URL`: NATS server URL (e.g., `localhost:4222`)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NATS_URL` | NATS server URL | `localhost:4222` |
 
-Ensure these variables are set in the `.env` files for each microservice.
+Copy the template config:
+```bash
+cp add_user/.env.example add_user/.env
+# Repeat for each service or symlink a single .env
+```
 
 ## How to Run
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sergiopdev1981/labs.git
-   cd labs/microservices
-   ```
+1. Make sure PostgreSQL and NATS are running.
 
-2. Run the linting and dependency setup script:
-   ```bash
-   ./run_lint.sh
-   ```
+2. Create the `users` table:
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL
+);
+```
 
-3. Start each microservice individually by navigating to its directory and running:
-   ```bash
-   go run main.go
-   ```
+3. Start services (in separate terminals):
+```bash
+cd add_user && go run main.go
+cd get_user && go run main.go
+```
 
+4. Send a request using one of the test clients:
+```bash
+cd add_user/clients && go run client.go
+```
+
+Or programmatically via NATS:
+```go
+response, err := nc.Request("users.add", []byte(`{"username":"alice"}`), 2*time.Second)
+```
+
+## Linting
+
+```bash
+./run_lint.sh
+```

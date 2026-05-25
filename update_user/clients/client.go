@@ -2,35 +2,55 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
 )
 
-func sendRequest() {
-	nc, err := nats.Connect("localhost:4222")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer nc.Close()
+type updateUserRequest struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+}
 
-	// Send request and wait for a response
-	requestData := `{"username": "testuser"}`
-	response, err := nc.Request("users.add.service", []byte(requestData), 10*time.Second) // 10-second timeout
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Handle response
-	var responseData map[string]string
-	if err := json.Unmarshal(response.Data, &responseData); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Received response for user%v: %v", responseData["user_id"], responseData["message"])
+type updateUserResponse struct {
+	Message string `json:"message"`
+	Error   string `json:"error,omitempty"`
 }
 
 func main() {
-	sendRequest()
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	nc, err := nats.Connect(os.Getenv("NATS_URL"))
+	if err != nil {
+		log.Fatalf("Failed to connect to NATS: %v", err)
+	}
+	defer nc.Close()
+
+	reqData := updateUserRequest{ID: 1, Username: "newusername"}
+	reqDataBytes, err := json.Marshal(reqData)
+	if err != nil {
+		log.Fatalf("Failed to marshal request data: %v", err)
+	}
+
+	resp, err := nc.Request("users.update", reqDataBytes, 2*time.Second)
+	if err != nil {
+		log.Fatalf("Failed to send request: %v", err)
+	}
+
+	var respData updateUserResponse
+	if err := json.Unmarshal(resp.Data, &respData); err != nil {
+		log.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if respData.Error != "" {
+		fmt.Printf("Error: %s\n", respData.Error)
+	} else {
+		fmt.Printf("Success: %s\n", respData.Message)
+	}
 }

@@ -1,13 +1,21 @@
 # Changelog
 
+## [0.2.0] - 2026-05-24
+### Fixed
+- Added missing `_ "github.com/lib/pq"` import to `delete_user` and `get_user` services (Postgres driver was not registered).
+- Fixed `godotenv.Load()` order in `add_user`, `get_users`, `update_user` — now called before `nats.Connect()` so `NATS_URL` is properly loaded.
+- `update_user` service was a copy of `add_user` — rewritten with actual `UPDATE` SQL logic.
+- Standardized NATS subject names across all services (`users.add`, `users.get`, `users.list`, `users.update`, `users.delete`).
+- Removed committed `.env` files from git tracking and added `.gitignore`.
+- Created `.env.example` files for all services.
+- Cleaned up verbose comments across all source files.
+- Updated test files to match new subject names and fixed `update_user` test.
+- Updated client files to match new subject names.
+
 ## [0.1.0] - 2025-07-28
 ### Added
-- Implemented `run_lint.sh` script to automate `go mod tidy` and `golangci-lint` execution across all microservices.
-- Added `.golangci.yml` configuration files for linting in each microservice.
-- Enhanced error handling in `delete_user` microservice by checking return values of `req.RespondJSON`.
-
-### Fixed
-- Resolved linting issues in `delete_user` microservice.
-
-### Notes
-- Initial version of the project with basic microservices structure and linting setup.
+- Initial microservices structure: `add_user`, `delete_user`, `get_user`, `get_users`, `update_user`.
+- NATS microservice integration with request-reply pattern.
+- PostgreSQL persistence for user CRUD operations.
+- `run_lint.sh` script for automated linting.
+- Unit and integration tests for services.

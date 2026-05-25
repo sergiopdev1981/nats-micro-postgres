@@ -17,8 +17,7 @@ func TestSendRequest(t *testing.T) {
 	}
 	defer nc.Close()
 
-	// Subscribe to the request subject and provide a mock response
-	if _, err := nc.Subscribe("users.add.service", func(m *nats.Msg) {
+	if _, err := nc.Subscribe("users.add", func(m *nats.Msg) {
 		response := map[string]string{
 			"message": "User successfully added",
 			"user_id": "123",
@@ -33,7 +32,7 @@ func TestSendRequest(t *testing.T) {
 
 	// Function to test the request
 	sendRequest := func() (map[string]string, error) {
-		response, err := nc.Request("users.add.service", []byte(`{"username": "testuser"}`), 2*time.Second)
+		response, err := nc.Request("users.add", []byte(`{"username": "testuser"}`), 2*time.Second)
 		if err != nil {
 			return nil, err
 		}
