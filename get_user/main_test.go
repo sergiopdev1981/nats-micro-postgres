@@ -27,8 +27,7 @@ func TestHandleGetUser(t *testing.T) {
 		return nil, sql.ErrNoRows
 	}
 
-	// Subscribe to the request subject and provide a mock response
-	if _, err := nc.Subscribe("user.get.service", func(m *nats.Msg) {
+	if _, err := nc.Subscribe("users.get", func(m *nats.Msg) {
 		// Unmarshal the request data
 		var requestData map[string]int
 		if err := json.Unmarshal(m.Data, &requestData); err != nil {
@@ -65,8 +64,7 @@ func TestHandleGetUser(t *testing.T) {
 		requestData := map[string]int{"id": userID}
 		data, _ := json.Marshal(requestData)
 
-		// Send the request to the NATS server
-		response, err := nc.Request("user.get.service", data, 2*time.Second)
+		response, err := nc.Request("users.get", data, 2*time.Second)
 		if err != nil {
 			return nil, err
 		}

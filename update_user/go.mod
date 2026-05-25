@@ -1,4 +1,4 @@
-module add_user
+module update_user
 
 go 1.22.6
 
